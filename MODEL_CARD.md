@@ -1,6 +1,6 @@
 # Model Card — Skip-Connection ANN
 
-*Generated on 2026-04-19 by the SumANN pipeline.*
+*Generated on 2026-04-20 by the SumANN pipeline.*
 
 
 ## 1. Model Details
@@ -39,16 +39,16 @@ The model is a trained regression surrogate for the scientific system represente
 
 ## 4. Architecture
 
-- **Layer widths**: [5, 8, 8, 1]
-- **Activation**: `gelu`
-- **Dropout rate**: 0.0316
+- **Layer widths**: [5, 30, 30, 30, 30, 30, 1]
+- **Activation**: `leaky_relu`
+- **Dropout rate**: 0.0007
 - **Batch normalisation**: False
 - **Skip connections**: enabled (input projection + per-layer residual sum).
 
 ## 5. Training Procedure
 
-- **Optimiser**: `SGD`
-- **Learning rate**: 0.001286
+- **Optimiser**: `RMSprop`
+- **Learning rate**: 0.001983
 - **Batch size**: 8
 - **Max epochs**: 3000  (early-stopped on validation loss, patience = 250 epochs)
 - **Loss**: Mean squared error.
@@ -61,11 +61,11 @@ Computed on the held-out test split (never used during training or validation).
 
 | Metric | Value |
 |---|---|
-| Train RMSE | 2.044084 |
-| Validation RMSE | 2.308655 |
-| **Test RMSE** | **1.739004** |
-| **Test R²** | **0.9854** |
-| Test R² (parity-fit) | 0.9856 |
+| Train RMSE | 0.705882 |
+| Validation RMSE | 2.801189 |
+| **Test RMSE** | **3.261276** |
+| **Test R²** | **0.9465** |
+| Test R² (parity-fit) | 0.9483 |
 
 ## 7. Uncertainty Quantification
 
@@ -99,7 +99,7 @@ The pipeline is deterministic up to the random seeds used for train/val/test spl
 
 ```
 Siddharth Suman, Ph.D.. SumANN: Physics-informed Explainable Neural Network.
-Trained model card, generated 2026-04-19.
+Trained model card, generated 2026-04-20.
 Pipeline: github.com/ (source-location-here)
 ```
 
