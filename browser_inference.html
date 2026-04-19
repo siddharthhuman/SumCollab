@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SumANN · In-browser inference</title>
+<style>
+  :root {
+    --fg:       #1a1a1a;
+    --muted:    #666;
+    --accent:   #2e75b6;
+    --good:     #1e8449;
+    --card:     #ffffff;
+    --bg:       #f4f6f8;
+    --border:   #dcdfe4;
+    --mono:     Consolas, "SF Mono", Monaco, "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+    padding: 32px 16px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 {
+    font-size: 28px;
+    margin: 0 0 4px 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .status {
+    padding: 10px 14px; border-radius: 8px; margin-bottom: 20px;
+    font-family: var(--mono); font-size: 13px;
+    background: #eef2f6; color: var(--muted);
+  }
+  .status.ok    { background: #e8f8f0; color: var(--good); }
+  .status.err   { background: #fdecea; color: #8b0000; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin-bottom: 20px;
+  }
+  .card h2 { margin: 0 0 16px 0; font-size: 18px; color: var(--fg); }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
+  input[type="number"] {
+    width: 100%; padding: 8px 10px; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 6px;
+    font-family: var(--mono); background: #fafbfc;
+  }
+  input[type="number"]:focus { outline: none; border-color: var(--accent); }
+  button {
+    padding: 10px 24px; background: var(--accent); color: white;
+    border: none; border-radius: 6px; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 8px;
+  }
+  button:hover { background: #1d5a92; }
+  button:disabled { background: #aaa; cursor: not-allowed; }
+  .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .result-card {
+    background: #f8fafc; border-left: 4px solid var(--accent);
+    padding: 14px 16px; border-radius: 4px;
+  }
+  .result-name { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .result-val  { font-size: 24px; font-weight: 700; font-family: var(--mono); color: var(--fg); }
+  .brand { font-size: 13px; color: var(--muted); text-align: right; margin-top: 24px; }
+  .brand a { color: var(--accent); text-decoration: none; }
+  .small { font-size: 12px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SumANN — In-browser inference</h1>
+  <div class="sub">Running the trained model entirely client-side via
+    <span style="font-family: var(--mono)">onnxruntime-web</span>. No server, no upload.</div>
+
+  <div id="status" class="status">Loading model…</div>
+
+  <div class="card" id="form-card" style="display:none">
+    <h2>Inputs</h2>
+    <form id="input-form">
+      <div class="grid" id="input-grid"></div>
+      <button type="submit" id="predict-btn">Predict</button>
+      <div class="small">Inputs are standardised automatically using the saved
+        StandardScaler parameters before being fed to the model.</div>
+    </form>
+  </div>
+
+  <div class="card" id="result-card" style="display:none">
+    <h2>Predictions</h2>
+    <div id="results" class="results"></div>
+  </div>
+
+  <div class="brand">
+    © Siddharth Suman, Ph.D. &nbsp;|&nbsp;
+    <a href="http://www.siddharthsuman.com" target="_blank">www.siddharthsuman.com</a>
+  </div>
+</div>
+
+<!-- onnxruntime-web from jsDelivr (WASM backend, no GPU required) -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+<script>
+(async function () {
+  const statusEl = document.getElementById("status");
+  const setStatus = (msg, cls = "") => {
+    statusEl.textContent = msg;
+    statusEl.className = "status " + cls;
+  };
+
+  let session = null;
+  let meta    = null;
+
+  try {
+    // Load scaler + column metadata
+    const metaRes = await fetch("scaler_params.json");
+    if (!metaRes.ok) throw new Error("scaler_params.json not found");
+    meta = await metaRes.json();
+
+    // Build the input form
+    const grid = document.getElementById("input-grid");
+    meta.input_cols.forEach((name, i) => {
+      const unit = (meta.input_units && meta.input_units[i]) || "";
+      const cleanUnit = unit.replace(/[\[\]]/g, "").trim();
+      const wrap = document.createElement("div");
+      wrap.innerHTML = `
+        <label for="inp-${i}">${name}${cleanUnit ? ` [${cleanUnit}]` : ""}</label>
+        <input type="number" id="inp-${i}" data-idx="${i}" step="any" value="0" required />
+      `;
+      grid.appendChild(wrap);
+    });
+
+    // Load the model
+    session = await ort.InferenceSession.create("model.onnx", {
+      executionProviders: ["wasm"],
+    });
+
+    setStatus(
+      `Model loaded. ${meta.input_cols.length} input(s) → `
+      + `${meta.output_cols.length} output(s).`,
+      "ok"
+    );
+    document.getElementById("form-card").style.display = "";
+
+  } catch (err) {
+    setStatus("Failed to load model: " + err.message, "err");
+    return;
+  }
+
+  // Prediction handler
+  document.getElementById("input-form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    if (!session) return;
+
+    const nIn = meta.input_cols.length;
+    const raw = new Float32Array(nIn);
+    for (let i = 0; i < nIn; i++) {
+      const el = document.getElementById("inp-" + i);
+      raw[i] = parseFloat(el.value) || 0;
+    }
+
+    // Standard-scale: (x - mean) / scale
+    const scaled = new Float32Array(nIn);
+    for (let i = 0; i < nIn; i++) {
+      const s = meta.scale[i] || 1;
+      scaled[i] = (raw[i] - meta.mean[i]) / s;
+    }
+
+    const btn = document.getElementById("predict-btn");
+    btn.disabled = true;
+    btn.textContent = "Running…";
+
+    try {
+      const tensor = new ort.Tensor("float32", scaled, [1, nIn]);
+      const result = await session.run({ input: tensor });
+      const out    = result.output.data;
+
+      const holder = document.getElementById("results");
+      holder.innerHTML = "";
+      meta.output_cols.forEach((name, j) => {
+        const unit = (meta.output_units && meta.output_units[j]) || "";
+        const cleanUnit = unit.replace(/[\[\]]/g, "").trim();
+        const card = document.createElement("div");
+        card.className = "result-card";
+        card.innerHTML = `
+          <div class="result-name">${name}${cleanUnit ? " [" + cleanUnit + "]" : ""}</div>
+          <div class="result-val">${Number(out[j]).toFixed(6)}</div>
+        `;
+        holder.appendChild(card);
+      });
+      document.getElementById("result-card").style.display = "";
+
+    } catch (err) {
+      setStatus("Inference failed: " + err.message, "err");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Predict";
+    }
+  });
+})();
+</script>
+</body>
+</html>

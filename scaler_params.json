@@ -1,0 +1,38 @@
+{
+  "mean": [
+    46.333333333333336,
+    0.0,
+    5.0,
+    0.5499999999999999,
+    0.3
+  ],
+  "scale": [
+    32.61475467058157,
+    0.816496580927726,
+    1.632993161855452,
+    0.45000000000000007,
+    0.2
+  ],
+  "input_cols": [
+    "Load",
+    "Skewness",
+    "kurtosis",
+    "Pattern ratio",
+    "Roughness"
+  ],
+  "output_cols": [
+    "Contact area ratio"
+  ],
+  "input_units": [
+    "N",
+    "-",
+    "-",
+    "-",
+    "\u00b5m"
+  ],
+  "output_units": [
+    "%"
+  ],
+  "model_type": "skip",
+  "opset": 17
+}
