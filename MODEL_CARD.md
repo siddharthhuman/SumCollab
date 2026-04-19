@@ -34,22 +34,22 @@ The model is a trained regression surrogate for the scientific system represente
 - **Total samples**: 432
 - **Input features** (5): `Load`, `Skewness`, `kurtosis`, `Pattern ratio`, `Roughness`
 - **Targets** (1): `Contact area ratio`
-- **Split** (train / val / test): 0.60 / 0.20 / 0.20
+- **Split** (train / val / test): 0.50 / 0.10 / 0.40
 - **Preprocessing**: `sklearn.preprocessing.StandardScaler` fit on the combined dataset. Fitted scaler exported alongside the model as `scaler_params.json` for deployment.
 
 ## 4. Architecture
 
-- **Layer widths**: [5, 8, 1]
+- **Layer widths**: [5, 8, 8, 1]
 - **Activation**: `gelu`
-- **Dropout rate**: 0.0464
+- **Dropout rate**: 0.0316
 - **Batch normalisation**: False
 - **Skip connections**: enabled (input projection + per-layer residual sum).
 
 ## 5. Training Procedure
 
 - **Optimiser**: `SGD`
-- **Learning rate**: 0.006595
-- **Batch size**: 4
+- **Learning rate**: 0.001286
+- **Batch size**: 8
 - **Max epochs**: 3000  (early-stopped on validation loss, patience = 250 epochs)
 - **Loss**: Mean squared error.
 - **Physics residual**: disabled.
@@ -61,11 +61,11 @@ Computed on the held-out test split (never used during training or validation).
 
 | Metric | Value |
 |---|---|
-| Train RMSE | 2.123161 |
-| Validation RMSE | 2.044974 |
-| **Test RMSE** | **2.678964** |
-| **Test R²** | **0.9628** |
-| Test R² (parity-fit) | 0.9671 |
+| Train RMSE | 2.044084 |
+| Validation RMSE | 2.308655 |
+| **Test RMSE** | **1.739004** |
+| **Test R²** | **0.9854** |
+| Test R² (parity-fit) | 0.9856 |
 
 ## 7. Uncertainty Quantification
 
