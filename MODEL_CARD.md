@@ -31,25 +31,25 @@ The model is a trained regression surrogate for the scientific system represente
 
 ## 3. Training Data
 
-- **Total samples**: 432
-- **Input features** (5): `Load`, `Skewness`, `kurtosis`, `Pattern ratio`, `Roughness`
-- **Targets** (1): `Contact area ratio`
-- **Split** (train / val / test): 0.50 / 0.10 / 0.40
+- **Total samples**: 20500
+- **Input features** (7): `flow Behavior index`, `Applied Electrical Potential`, `number of link`, `Orientation`, `Link length`, `Pitch along flow-direction (x-dir)`, `Pitch perpendicular to fluid flow (Y-dir)`
+- **Targets** (1): `Mixing Efficency`
+- **Split** (train / val / test): 0.80 / 0.15 / 0.05
 - **Preprocessing**: `sklearn.preprocessing.StandardScaler` fit on the combined dataset. Fitted scaler exported alongside the model as `scaler_params.json` for deployment.
 
 ## 4. Architecture
 
-- **Layer widths**: [5, 30, 30, 30, 30, 30, 1]
-- **Activation**: `leaky_relu`
-- **Dropout rate**: 0.0007
+- **Layer widths**: [7, 117, 117, 117, 117, 117, 117, 1]
+- **Activation**: `tanh`
+- **Dropout rate**: 0.0302
 - **Batch normalisation**: False
 - **Skip connections**: enabled (input projection + per-layer residual sum).
 
 ## 5. Training Procedure
 
-- **Optimiser**: `RMSprop`
-- **Learning rate**: 0.001983
-- **Batch size**: 8
+- **Optimiser**: `NAdam`
+- **Learning rate**: 0.001958
+- **Batch size**: 4
 - **Max epochs**: 3000  (early-stopped on validation loss, patience = 250 epochs)
 - **Loss**: Mean squared error.
 - **Physics residual**: disabled.
@@ -61,11 +61,11 @@ Computed on the held-out test split (never used during training or validation).
 
 | Metric | Value |
 |---|---|
-| Train RMSE | 0.705882 |
-| Validation RMSE | 2.801189 |
-| **Test RMSE** | **3.261276** |
-| **Test R²** | **0.9465** |
-| Test R² (parity-fit) | 0.9483 |
+| Train RMSE | 0.845961 |
+| Validation RMSE | 0.912182 |
+| **Test RMSE** | **0.985134** |
+| **Test R²** | **0.9968** |
+| Test R² (parity-fit) | 0.9969 |
 
 ## 7. Uncertainty Quantification
 

@@ -1,33 +1,41 @@
 {
   "mean": [
-    46.333333333333336,
-    0.0,
-    5.0,
-    0.5499999999999999,
-    0.3
+    1.0,
+    60.0,
+    2.4634146341463414,
+    7.5,
+    60.0,
+    137.1951219512195,
+    0.0
   ],
   "scale": [
-    32.61475467058157,
-    0.816496580927726,
-    1.632993161855452,
-    0.45000000000000007,
-    0.2
+    0.1414213562373095,
+    28.284271247461902,
+    0.5453824335365342,
+    5.5901699437494745,
+    28.284271247461902,
+    27.67513589734199,
+    8.730378697119727
   ],
   "input_cols": [
-    "Load",
-    "Skewness",
-    "kurtosis",
-    "Pattern ratio",
-    "Roughness"
+    "flow Behavior index",
+    "Applied Electrical Potential",
+    "number of link",
+    "Orientation",
+    "Link length",
+    "Pitch along flow-direction (x-dir)",
+    "Pitch perpendicular to fluid flow (Y-dir)"
   ],
   "output_cols": [
-    "Contact area ratio"
+    "Mixing Efficency"
   ],
   "input_units": [
-    "N",
-    "-",
-    "-",
-    "-",
+    "n ",
+    "V/cm",
+    "#",
+    "degree",
+    "\u00b5m",
+    "\u00b5m",
     "\u00b5m"
   ],
   "output_units": [
